@@ -56,7 +56,7 @@ namespace VPUpdater
             if (!VirtualParadise.IsInVpPath())
             {
                 // VirtualParadise.exe not found, we cannot do anything
-                DialogResult result = MessageBox.Show(Resources.VpExeNotFound,
+                DialogResult result = MessageBox.Show(String.Format(Resources.VpExeNotFound, VirtualParadise.Exe),
                                                       Resources.Error,
                                                       MessageBoxButtons.OK,
                                                       MessageBoxIcon.Error);
