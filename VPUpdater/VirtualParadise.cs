@@ -66,7 +66,7 @@ namespace VPUpdater
                 // Edwin pls. https://semver.org/ - you can thank me later.
                 string  fileVersion = FileVersionInfo.GetVersionInfo(ExePath).FileVersion;
                 Version version     = Version.Parse(fileVersion);
-                return new SemVer(version.Major, version.Minor, version.Build - 1);
+                return new SemVer(version.Major, version.Minor, version.Build);
             }
 
             return new SemVer("0.0.0", true);
