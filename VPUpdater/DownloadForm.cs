@@ -56,17 +56,13 @@ namespace VPUpdater
             if (!VirtualParadise.IsInVpPath())
             {
                 // VirtualParadise.exe not found, we cannot do anything
-                DialogResult result = MessageBox.Show(String.Format(Resources.VpExeNotFound, VirtualParadise.Exe),
-                                                      Resources.Error,
-                                                      MessageBoxButtons.OK,
-                                                      MessageBoxIcon.Error);
+                MessageBox.Show(String.Format(Resources.VpExeNotFound, VirtualParadise.Exe),
+                                Resources.Error,
+                                MessageBoxButtons.OK,
+                                MessageBoxIcon.Error);
 
-                if (result == DialogResult.Yes)
-                {
-                    VirtualParadise.Launch(this.commandLineArgs);
-                    Environment.Exit(0);
-                    return;
-                }
+                Environment.Exit(0);
+                return;
             }
 
             this.labelDownloading.Text = Resources.UpdateCheck;
