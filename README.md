@@ -1,18 +1,30 @@
 # VPUpdater
+Automatic updater for Virtual Paradise
 
+## About
 This tool is directly inspired by [VPUpdater](https://github.com/Evonex/VPUpdater) by Evonex. However since its last commit 4 years prior, a lot has changed and there were a lot of issues.
 
 * The tool did not support the 64-bit version of Virtual Paradise.
 * The original dev committed build output and binaries to SCM.
-* 
+* It is incompatible with new the VP download flow.
 * It was written in VB.NET (this isn't necessarily bad, but C# is more properly supported by the community.)
 
-## Prerequisites
+I've rewritten the tool from the ground up in C# to correct all of these issues.
+
+## How to use
+1. Download the [latest release](https://github.com/oliverbooth/VPUpdater) and extract the files to your Virtual Paradise directory
+2. Create a shortcut to VPUpdater.exe
+3. Rename the shortcut to something meaningful (you know... like `Virtual Paradise`)
+4. Place that shortcut on your desktop / taskbar / useful location.
+
+Now when you launch "Virtual Paradise", it will launch the updater first. If there are no updates, the tool with simply launch Virtual Paradise. If there is an update, it will download the latest setup and you can go from there.
+
+## Building prerequisites
 |Prerequisite|Version|
 |- |- |
 |.NET|4.6|
 
-## Nuget Package Dependencies
+## Nuget package dependencies
 |Depdendencny|Version|
 |- |- |
 |[AngleSharp](https://www.nuget.org/packages/AngleSharp/0.12.1)|0.12.1|
