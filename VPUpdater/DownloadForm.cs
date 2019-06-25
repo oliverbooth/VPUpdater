@@ -53,6 +53,9 @@ namespace VPUpdater
         {
             this.Show();
 
+            this.labelDownloading.Text = String.Format(Resources.VpExeCheck, VirtualParadise.Exe);
+            this.progressBar.Style = ProgressBarStyle.Marquee;
+
             if (!VirtualParadise.IsInVpPath())
             {
                 // VirtualParadise.exe not found, we cannot do anything
