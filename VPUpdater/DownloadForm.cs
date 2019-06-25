@@ -10,6 +10,8 @@
 
 namespace VPUpdater
 {
+    #region Using Directives
+
     using System;
     using System.ComponentModel;
     using System.Diagnostics;
@@ -20,6 +22,8 @@ namespace VPUpdater
     using Properties;
     using Version = SemVer.Version;
 
+    #endregion
+
     /// <summary>
     /// The main window of the application.
     /// </summary>
@@ -27,9 +31,11 @@ namespace VPUpdater
     {
         #region Fields
 
-        private          string    setupTempFile = "";
-        private readonly string[]  commandLineArgs;
-        private          WebClient client = new WebClient();
+        private          string          setupTempFile = "";
+        private readonly string[]        commandLineArgs;
+        private readonly WebClient       client = new WebClient();
+        private readonly Updater         updater;
+        private readonly VirtualParadise virtualParadise;
 
         #endregion
 
@@ -40,164 +46,23 @@ namespace VPUpdater
         /// </summary>
         public DownloadForm(string[] args)
         {
+            this.InitializeComponent();
+
             // Store CLI args as DI to pass to VP
             this.commandLineArgs = args;
-            this.InitializeComponent();
+            this.virtualParadise = VirtualParadise.GetCurrent();
+            this.updater         = new Updater(this.virtualParadise);
         }
 
         #endregion
 
         #region Methods
 
-        private void DownloadForm_Load(object sender, EventArgs e)
-        {
-            this.Show();
-
-            this.labelDownloading.Text = String.Format(Resources.VpExeCheck, VirtualParadise.Exe);
-            this.progressBar.Style     = ProgressBarStyle.Marquee;
-
-            if (!VirtualParadise.IsInVpPath())
-            {
-                // VirtualParadise.exe not found, we cannot do anything
-                MessageBox.Show(String.Format(Resources.VpExeNotFound, VirtualParadise.Exe),
-                                Resources.Error,
-                                MessageBoxButtons.OK,
-                                MessageBoxIcon.Error);
-
-                Environment.Exit(0);
-                return;
-            }
-
-            this.DoUpdateCheck();
-        }
-
         /// <summary>
-        /// Performs the complete update routine.
+        /// Called when <see cref="buttonCancel"/> is clicked.
         /// </summary>
-        private async void DoUpdateCheck()
-        {
-            this.labelDownloading.Text = Resources.UpdateCheck;
-
-            bool update = await CheckForUpdates();
-
-            if (!update)
-            {
-                // No update is available - the client is up to date
-
-                this.labelDownloading.Text = Resources.UpToDate;
-                this.progressBar.Style     = ProgressBarStyle.Continuous;
-                this.progressBar.Value     = this.progressBar.Maximum;
-                this.buttonCancel.Text     = Resources.Close;
-
-                // Launch as normal
-                VirtualParadise.Launch(this.commandLineArgs);
-                Environment.Exit(0);
-                return;
-            }
-
-            string downloadLink = await VirtualParadise.GetDownloadLink();
-            if (String.IsNullOrEmpty(downloadLink))
-            {
-                // There was an error parsing the HTML or fetching the download page
-                DialogResult result = MessageBox.Show(Resources.DownloadLinkFetchFail,
-                                                      Resources.Error,
-                                                      MessageBoxButtons.YesNo,
-                                                      MessageBoxIcon.Warning);
-
-                if (result == DialogResult.Yes)
-                {
-                    VirtualParadise.Launch(this.commandLineArgs);
-                }
-
-                Environment.Exit(0);
-                return;
-            }
-
-            this.client.DownloadFileCompleted += this.LaunchSetup;
-            this.client.DownloadProgressChanged += (o, args) =>
-                                                   {
-                                                       // Update progress for user
-                                                       this.progressBar.Style = ProgressBarStyle.Continuous;
-                                                       this.progressBar.Value = args.ProgressPercentage;
-                                                       this.labelDownloading.Text =
-                                                           String.Format(Resources.DownloadingUpdate,
-                                                                         args.ProgressPercentage);
-                                                   };
-
-            this.setupTempFile = Path.GetTempPath() + Path.DirectorySeparatorChar + Path.GetFileName(downloadLink);
-            try
-            {
-                // Download the setup file to TEMP
-                await this.client.DownloadFileTaskAsync(downloadLink, this.setupTempFile);
-            }
-            catch
-            {
-                // ignored
-            }
-        }
-
-        private void LaunchSetup(object sender, AsyncCompletedEventArgs e)
-        {
-            if (e.Cancelled)
-            {
-                return;
-            }
-
-            this.progressBar.Style = ProgressBarStyle.Marquee;
-
-            if (String.IsNullOrEmpty(this.setupTempFile) || !File.Exists(this.setupTempFile))
-            {
-                // The setup file wasn't downloaded properly
-                DialogResult result = MessageBox.Show(Resources.LaunchSetupError,
-                                                      Resources.Error,
-                                                      MessageBoxButtons.YesNo,
-                                                      MessageBoxIcon.Warning);
-
-                if (result == DialogResult.Yes)
-                {
-                    // Launch VP anyway
-                    VirtualParadise.Launch(this.commandLineArgs);
-                }
-
-                Environment.Exit(0);
-                return;
-            }
-
-            // Launch setup and wait for its completion
-            this.labelDownloading.Text = Resources.WaitingForSetup;
-            Process process = new Process {StartInfo = new ProcessStartInfo(this.setupTempFile)};
-            process.Start();
-            process.WaitForExit();
-
-            // TODO do any clean-up here
-
-            Environment.Exit(0);
-        }
-
-        /// <summary>
-        /// Checks for a Virtual Paradise update.
-        /// </summary>
-        /// <returns>Returns <see langword="true"/> if the there is an updated and the user accepted, <see langword="false"/> otherwise.</returns>
-        private static async Task<bool> CheckForUpdates()
-        {
-            Version current = VirtualParadise.GetCurrentVersion();
-            Version latest  = await VirtualParadise.GetLatestVersion();
-
-            if (current >= latest) // thank you SemVer
-            {
-                return false;
-            }
-
-            DialogResult result = MessageBox.Show(String.Format(Resources.UpdatePrompt, current, latest),
-                                                  Resources.UpdateAvailable,
-                                                  MessageBoxButtons.YesNo,
-                                                  MessageBoxIcon.Question);
-
-            return result == DialogResult.Yes;
-        }
-
-        #endregion
-
+        /// <param name="sender">The event sender.</param>
+        /// <param name="e">The event args.s</param>
         private void ButtonCancel_Click(object sender, EventArgs e)
         {
             if (this.buttonCancel.Text != Resources.Close)
@@ -209,26 +74,207 @@ namespace VPUpdater
 
                 if (result == DialogResult.Yes)
                 {
-                    this.client.CancelAsync();
+                    this.updater.Cancel();
                     this.labelDownloading.Text = Resources.DownloadCancelled;
                     this.progressBar.Value     = 0;
 
                     Application.DoEvents();
 
                     // We've cancelled the update but we should still confirm VP launch
-                    result = MessageBox.Show(String.Format(Resources.Launch, VirtualParadise.GetCurrentVersion()),
+                    result = MessageBox.Show(String.Format(Resources.Launch, this.virtualParadise.Version),
                                              Resources.LaunchTitle,
                                              MessageBoxButtons.YesNo,
                                              MessageBoxIcon.Warning);
 
                     if (result == DialogResult.Yes)
                     {
-                        VirtualParadise.Launch(this.commandLineArgs);
+                        this.virtualParadise.Launch(this.commandLineArgs);
                     }
                 }
             }
 
             Environment.Exit(0);
         }
+
+        /// <summary>
+        /// Checks for a Virtual Paradise update.
+        /// </summary>
+        /// <returns>Returns <see langword="true"/> if the there is an updated and the user accepted, <see langword="false"/> otherwise.</returns>
+        private async Task<Version> CheckForUpdates()
+        {
+            return await this.updater.FetchLatest();
+        }
+
+        /// <summary>
+        /// Called when the form first loads.
+        /// </summary>
+        /// <param name="sender">The event sender.</param>
+        /// <param name="e">The event data.</param>
+        private void DownloadForm_Load(object sender, EventArgs e)
+        {
+            this.Show();
+            this.Run();
+        }
+
+        /// <summary>
+        /// Performs the update routine.
+        /// </summary>
+        private async void Run()
+        {
+            this.labelDownloading.Text = String.Format(Resources.VpExeCheck, VirtualParadise.ExeFilename);
+            this.progressBar.Style     = ProgressBarStyle.Marquee;
+
+            if (this.virtualParadise == null)
+            {
+                this.progressBar.Style = ProgressBarStyle.Continuous;
+                this.progressBar.Value = 0;
+
+                MessageBox.Show(String.Format(Resources.VpExeNotFound, VirtualParadise.ExeFilename),
+                                Resources.Error,
+                                MessageBoxButtons.OK,
+                                MessageBoxIcon.Error);
+
+                Environment.Exit(0);
+                return;
+            }
+
+            this.labelDownloading.Text = Resources.UpdateCheck;
+
+            Version currentVersion = this.virtualParadise.Version;
+            Version latestVersion  = await this.updater.FetchLatest();
+            if (currentVersion < latestVersion)
+            {
+                DialogResult result = MessageBox.Show(
+                    String.Format(Resources.UpdatePrompt, currentVersion, latestVersion),
+                    Resources.UpdateAvailable,
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Question);
+
+                if (result == DialogResult.No)
+                {
+                    // The update was denied but the user still intended to launch Virtual Paradise
+                    this.virtualParadise.Launch(this.commandLineArgs);
+                    Environment.Exit(0);
+                    return;
+                }
+            }
+            else
+            {
+                // Everything is up to date!
+                this.labelDownloading.Text = Resources.UpToDate;
+                this.progressBar.Style     = ProgressBarStyle.Continuous;
+                this.progressBar.Value     = this.progressBar.Maximum;
+                this.buttonCancel.Text     = Resources.Close;
+
+                this.virtualParadise.Launch(this.commandLineArgs);
+
+                Environment.Exit(0);
+                return;
+            }
+
+            this.labelDownloading.Text = Resources.DownloadLinkFetch;
+            Uri downloadUri;
+            try
+            {
+                downloadUri = await this.updater.FetchDownloadLink();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(String.Format(Resources.DownloadLinkFetchError, ex.Message),
+                                Resources.Error,
+                                MessageBoxButtons.OK,
+                                MessageBoxIcon.Error);
+
+                DialogResult result =
+                    MessageBox.Show(String.Format(Resources.Launch, this.virtualParadise.Version),
+                                    Resources.LaunchTitle,
+                                    MessageBoxButtons.YesNo,
+                                    MessageBoxIcon.Question);
+
+                if (result == DialogResult.Yes)
+                {
+                    this.virtualParadise.Launch(this.commandLineArgs);
+                }
+
+                Environment.Exit(0);
+                return;
+            }
+
+            this.updater.WebClientProgressChanged += this.WebClientProgressChanged;
+
+            try
+            {
+                // Download the update
+                await this.updater.Download(downloadUri);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(String.Format(Resources.DownloadUpdateError, ex.Message),
+                                Resources.Error,
+                                MessageBoxButtons.OK,
+                                MessageBoxIcon.Error);
+
+                DialogResult result =
+                    MessageBox.Show(String.Format(Resources.Launch, this.virtualParadise.Version),
+                                    Resources.LaunchTitle,
+                                    MessageBoxButtons.YesNo,
+                                    MessageBoxIcon.Question);
+
+                if (result == DialogResult.Yes)
+                {
+                    this.virtualParadise.Launch(this.commandLineArgs);
+                }
+
+                Environment.Exit(0);
+                return;
+            }
+
+            this.progressBar.Style     = ProgressBarStyle.Marquee;
+            this.labelDownloading.Text = Resources.WaitingForSetup;
+
+            try
+            {
+                // Launch the update setup
+                await this.updater.Launch();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(String.Format(Resources.LaunchSetupError, ex.Message),
+                                Resources.Error,
+                                MessageBoxButtons.OK,
+                                MessageBoxIcon.Error);
+
+                DialogResult result =
+                    MessageBox.Show(String.Format(Resources.Launch, this.virtualParadise.Version),
+                                    Resources.LaunchTitle,
+                                    MessageBoxButtons.YesNo,
+                                    MessageBoxIcon.Question);
+
+                if (result == DialogResult.Yes)
+                {
+                    this.virtualParadise.Launch(this.commandLineArgs);
+                }
+
+                Environment.Exit(0);
+                return;
+            }
+
+            Environment.Exit(0);
+        }
+
+        /// <summary>
+        /// Called when the internal <see cref="WebClient"/> updates its progress.
+        /// </summary>
+        /// <param name="sender">The event sender.</param>
+        /// <param name="e">The event args.</param>
+        private void WebClientProgressChanged(object sender, DownloadProgressChangedEventArgs e)
+        {
+            // Update progress for user
+            this.progressBar.Style     = ProgressBarStyle.Continuous;
+            this.progressBar.Value     = e.ProgressPercentage;
+            this.labelDownloading.Text = String.Format(Resources.DownloadingUpdate, e.ProgressPercentage);
+        }
+
+        #endregion
     }
 }
