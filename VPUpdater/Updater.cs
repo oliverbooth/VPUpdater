@@ -19,10 +19,8 @@ namespace VPUpdater
     using System.Net;
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
-    using System.Windows.Forms;
     using AngleSharp;
     using AngleSharp.Dom;
-    using AngleSharp.Io;
     using Properties;
     using SemVer = SemVer.Version;
 
@@ -36,11 +34,6 @@ namespace VPUpdater
         #region Fields
 
         /// <summary>
-        /// The <see cref="VirtualParadise"/> instance.
-        /// </summary>
-        private readonly VirtualParadise virtualParadise;
-
-        /// <summary>
         /// The web client instance.
         /// </summary>
         private WebClient webClient = new WebClient();
@@ -49,19 +42,6 @@ namespace VPUpdater
         /// The setup path.
         /// </summary>
         private string setupPath;
-
-        #endregion
-
-        #region Constructors
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Updater"/> class.
-        /// </summary>
-        /// <param name="virtualParadise">The <see cref="VirtualParadise"/> instance.</param>
-        public Updater(VirtualParadise virtualParadise)
-        {
-            this.virtualParadise = virtualParadise;
-        }
 
         #endregion
 
@@ -79,16 +59,12 @@ namespace VPUpdater
         /// <summary>
         /// Cancels any updates in progress.
         /// </summary>
-        public void Cancel()
-        {
+        public void Cancel() =>
             this.webClient?.CancelAsync();
-        }
 
         /// <inheritdoc/>
-        public void Dispose()
-        {
+        public void Dispose() =>
             this.webClient?.Dispose();
-        }
 
         /// <summary>
         /// Downloads the link to the latest
@@ -173,7 +149,8 @@ namespace VPUpdater
         {
             if (!File.Exists(this.setupPath))
             {
-                throw new FileNotFoundException(String.Format(Resources.FileNotFound, Path.GetFileName(this.setupPath)));
+                throw new FileNotFoundException(
+                    String.Format(Resources.FileNotFound, Path.GetFileName(this.setupPath)));
             }
 
             await Task.Run(() =>

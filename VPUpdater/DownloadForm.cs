@@ -13,11 +13,7 @@ namespace VPUpdater
     #region Using Directives
 
     using System;
-    using System.ComponentModel;
-    using System.Diagnostics;
-    using System.IO;
     using System.Net;
-    using System.Threading.Tasks;
     using System.Windows.Forms;
     using Properties;
     using Version = SemVer.Version;
@@ -31,9 +27,7 @@ namespace VPUpdater
     {
         #region Fields
 
-        private          string          setupTempFile = "";
         private readonly string[]        commandLineArgs;
-        private readonly WebClient       client = new WebClient();
         private readonly Updater         updater;
         private readonly VirtualParadise virtualParadise;
 
@@ -51,7 +45,7 @@ namespace VPUpdater
             // Store CLI args as DI to pass to VP
             this.commandLineArgs = args;
             this.virtualParadise = VirtualParadise.GetCurrent();
-            this.updater         = new Updater(this.virtualParadise);
+            this.updater         = new Updater();
         }
 
         #endregion
@@ -94,15 +88,6 @@ namespace VPUpdater
             }
 
             Environment.Exit(0);
-        }
-
-        /// <summary>
-        /// Checks for a Virtual Paradise update.
-        /// </summary>
-        /// <returns>Returns <see langword="true"/> if the there is an updated and the user accepted, <see langword="false"/> otherwise.</returns>
-        private async Task<Version> CheckForUpdates()
-        {
-            return await this.updater.FetchLatest();
         }
 
         /// <summary>

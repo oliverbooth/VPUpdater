@@ -10,9 +10,13 @@
 
 namespace VPUpdater
 {
+    #region Using Directives
+
     using System;
     using System.Linq;
     using System.Windows.Forms;
+
+    #endregion
 
     /// <summary>
     /// Application entry class.

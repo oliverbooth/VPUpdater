@@ -122,10 +122,8 @@ namespace VPUpdater
         /// Launches Virtual Paradise.
         /// </summary>
         /// <param name="args">The command-line arguments.</param>
-        public void Launch(params string[] args)
-        {
+        public void Launch(params string[] args) =>
             Process.Start(this.FileInfo.FullName, String.Join(" ", args));
-        }
 
         #endregion
     }
