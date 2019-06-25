@@ -50,9 +50,9 @@
             this.labelDownloading.AutoSize = true;
             this.labelDownloading.Location = new System.Drawing.Point(12, 9);
             this.labelDownloading.Name = "labelDownloading";
-            this.labelDownloading.Size = new System.Drawing.Size(107, 13);
+            this.labelDownloading.Size = new System.Drawing.Size(38, 13);
             this.labelDownloading.TabIndex = 4;
-            this.labelDownloading.Text = "Downloading setup...";
+            this.labelDownloading.Text = "Ready";
             // 
             // progressBar
             // 
