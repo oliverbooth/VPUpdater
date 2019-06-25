@@ -61,6 +61,15 @@ namespace VPUpdater.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The updater cannot continue..
+        /// </summary>
+        internal static string CannotContinue {
+            get {
+                return ResourceManager.GetString("CannotContinue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Close.
         /// </summary>
         internal static string Close {
@@ -106,11 +115,33 @@ namespace VPUpdater.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to fetch download link. Would you like to launch your current Virtual Paradise version?.
+        ///   Looks up a localized string similar to Fetching download link....
         /// </summary>
-        internal static string DownloadLinkFetchFail {
+        internal static string DownloadLinkFetch {
             get {
-                return ResourceManager.GetString("DownloadLinkFetchFail", resourceCulture);
+                return ResourceManager.GetString("DownloadLinkFetch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to fetch download link.
+        ///
+        ///{0}.
+        /// </summary>
+        internal static string DownloadLinkFetchError {
+            get {
+                return ResourceManager.GetString("DownloadLinkFetchError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not download update.
+        ///
+        ///{0}.
+        /// </summary>
+        internal static string DownloadUpdateError {
+            get {
+                return ResourceManager.GetString("DownloadUpdateError", resourceCulture);
             }
         }
         
@@ -120,6 +151,15 @@ namespace VPUpdater.Properties {
         internal static string Error {
             get {
                 return ResourceManager.GetString("Error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} was not found..
+        /// </summary>
+        internal static string FileNotFound {
+            get {
+                return ResourceManager.GetString("FileNotFound", resourceCulture);
             }
         }
         
@@ -135,7 +175,9 @@ namespace VPUpdater.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to There was an error launching the setup. Would you like to launch your current Virtual Paradise version?.
+        ///   Looks up a localized string similar to There was an error launching the setup.
+        ///
+        ///{0}.
         /// </summary>
         internal static string LaunchSetupError {
             get {
@@ -188,6 +230,15 @@ namespace VPUpdater.Properties {
         internal static string UpToDate {
             get {
                 return ResourceManager.GetString("UpToDate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The provided download URI is not from {0}..
+        /// </summary>
+        internal static string UriNotFromVp {
+            get {
+                return ResourceManager.GetString("UriNotFromVp", resourceCulture);
             }
         }
         

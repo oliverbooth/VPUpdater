@@ -120,14 +120,18 @@
   <data name="Close" xml:space="preserve">
     <value>Close</value>
   </data>
-  <data name="DownloadLinkFetchFail" xml:space="preserve">
-    <value>Failed to fetch download link. Would you like to launch your current Virtual Paradise version?</value>
+  <data name="DownloadLinkFetchError" xml:space="preserve">
+    <value>Failed to fetch download link.
+
+{0}</value>
   </data>
   <data name="Error" xml:space="preserve">
     <value>Error</value>
   </data>
   <data name="LaunchSetupError" xml:space="preserve">
-    <value>There was an error launching the setup. Would you like to launch your current Virtual Paradise version?</value>
+    <value>There was an error launching the setup.
+
+{0}</value>
   </data>
   <data name="UpdateAvailable" xml:space="preserve">
     <value>Update Available</value>
@@ -177,5 +181,22 @@ Current version: {0}</value>
   </data>
   <data name="VpExeCheck" xml:space="preserve">
     <value>Checking for {0}...</value>
+  </data>
+  <data name="CannotContinue" xml:space="preserve">
+    <value>The updater cannot continue.</value>
+  </data>
+  <data name="DownloadLinkFetch" xml:space="preserve">
+    <value>Fetching download link...</value>
+  </data>
+  <data name="DownloadUpdateError" xml:space="preserve">
+    <value>Could not download update.
+
+{0}</value>
+  </data>
+  <data name="FileNotFound" xml:space="preserve">
+    <value>{0} was not found.</value>
+  </data>
+  <data name="UriNotFromVp" xml:space="preserve">
+    <value>The provided download URI is not from {0}.</value>
   </data>
 </root>
