@@ -78,6 +78,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MachineArch.cs" />
+    <Compile Include="Helper.cs" />
+    <Compile Include="Updater.cs" />
     <Compile Include="VirtualParadise.cs" />
     <Compile Include="DownloadForm.cs">
       <SubType>Form</SubType>

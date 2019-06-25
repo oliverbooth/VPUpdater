@@ -10,122 +10,121 @@
 
 namespace VPUpdater
 {
+    #region Using Directives
+
     using System;
     using System.Diagnostics;
     using System.IO;
-    using System.Linq;
-    using System.Net;
-    using System.Text.RegularExpressions;
-    using System.Threading.Tasks;
-    using AngleSharp;
-    using AngleSharp.Dom;
     using SemVer = SemVer.Version;
+    using SysVer = System.Version;
+
+    #endregion
 
     /// <summary>
     /// Virtual Paradise helper class.
     /// </summary>
     public class VirtualParadise
     {
-        #region
+        #region Constants
 
         /// <summary>
-        /// The human-readable system architecture string.
+        /// Gets the exe filename of Virtual Paradise.
         /// </summary>
-        public static readonly string Arch = Environment.Is64BitOperatingSystem ? "x64" : "x86";
+        public const string ExeFilename = @"VirtualParadise.exe";
 
         /// <summary>
-        /// The Virtual Paradise executable filename.
+        /// Gets the root hostname for Virtual Paradise.
         /// </summary>
-        public static readonly string Exe = "VirtualParadise.exe";
+        public const string Hostname = @"virtualparadise.org";
 
         /// <summary>
-        /// The assumed path (including filename) of the Virtual Paradise executable.
+        /// Gets the URI of Virtual Paradise.
         /// </summary>
-        public static readonly string ExePath = Environment.CurrentDirectory + Path.DirectorySeparatorChar + Exe;
+        public static readonly Uri Uri = new Uri($@"https://{Hostname}");
+
+        #endregion
+
+        #region Constructors
 
         /// <summary>
-        /// The root URI of Virtual Paradise.
+        /// Initializes a new instance of the <see cref="VirtualParadise"/> class.
         /// </summary>
-        public static readonly string Uri = "https://virtualparadise.org";
+        /// <param name="current">The file information for Virtual Paradise.</param>
+        private VirtualParadise(FileInfo current)
+        {
+            // Virtual Paradise does not use the Semantic Version standard,
+            // but we can use System.Version as a middle-man, and build a SemVer-complaint
+            // version from its properties.
+            // Edwin pls. https://semver.org/ - you can thank me later.
+            string fileVersion = FileVersionInfo.GetVersionInfo(current.FullName).FileVersion;
+            SysVer version     = SysVer.Parse(fileVersion);
+
+            this.FileInfo = current;
+            this.Version  = GetSemVerFromSystemVersion(version);
+        }
+
+        #endregion
+
+        #region Properties
+
+        /// <summary>
+        /// Gets the file information for this version of Virtual Paradise.
+        /// </summary>
+        public FileInfo FileInfo { get; }
+
+        /// <summary>
+        /// Gets the version string of this Virtual Paradise.
+        /// </summary>
+        public SemVer Version { get; }
 
         #endregion
 
         #region Methods
 
         /// <summary>
-        /// Gets the current Virtual Paradise version.
+        /// Gets the current version of Virtual Paradise.
         /// </summary>
-        /// <returns>Returns a semantic-version compliant version.</returns>
-        public static SemVer GetCurrentVersion()
+        /// <returns>Returns a new instance of <see cref="VirtualParadise"/>, or <see langword="null"/> on failure.</returns>
+        public static VirtualParadise GetCurrent() =>
+            GetCurrent(Environment.CurrentDirectory);
+
+        /// <summary>
+        /// Gets the current version of Virtual Paradise.
+        /// </summary>
+        /// <param name="path">Optional. The path of the Virtual Paradise install. Defaults to current directory.</param>
+        /// <returns>Returns a new instance of <see cref="VirtualParadise"/>, or <see langword="null"/> on failure.</returns>
+        public static VirtualParadise GetCurrent(string path)
         {
-            if (IsInVpPath())
+            FileAttributes attributes = File.GetAttributes(path);
+            if (!attributes.HasFlag(FileAttributes.Directory))
             {
-                // Virtual Paradise does not use the Semantic Version standard,
-                // but we can use System.Version as a middle-man, and build a SemVer-complaint
-                // version from its properties.
-                // Edwin pls. https://semver.org/ - you can thank me later.
-                string  fileVersion = FileVersionInfo.GetVersionInfo(ExePath).FileVersion;
-                Version version     = Version.Parse(fileVersion);
-                return new SemVer(version.Major, version.Minor, version.Build);
+                path = Path.GetDirectoryName(path);
             }
 
-            return new SemVer("0.0.0", true);
-        }
-
-        /// <summary>
-        /// Gets the latest download link.
-        /// </summary>
-        /// <remarks></remarks>
-        public static async Task<string> GetDownloadLink()
-        {
-            IConfiguration   config   = Configuration.Default.WithDefaultLoader();
-            string           address  = $"{Uri}/Download";
-            IBrowsingContext context  = BrowsingContext.New(config);
-            IDocument        document = await context.OpenAsync(address);
-
-            string                    selector = @".download a.btn";
-            IHtmlCollection<IElement> cells    = document.QuerySelectorAll(selector);
-
-            IElement a =
-                cells.FirstOrDefault(c =>
-                                         Regex.Match(c.GetAttribute("href"),
-                                                     $"windows_{Regex.Escape(Arch)}")
-                                              .Success);
-
-            string href = a?.GetAttribute("href") ?? "";
-            return href;
-        }
-
-        /// <summary>
-        /// Gets the current Virtual Paradise version.
-        /// </summary>
-        /// <returns>Returns a semantic-version compliant version.</returns>
-        public static async Task<SemVer> GetLatestVersion()
-        {
-            using (WebClient client = new WebClient())
+            if (!Directory.Exists(path))
             {
-                string version = await client.DownloadStringTaskAsync($"{Uri}/version.txt");
-                return new SemVer(version);
+                return null;
             }
+
+            string filename = path + Path.DirectorySeparatorChar + ExeFilename;
+            return File.Exists(filename) ? new VirtualParadise(new FileInfo(filename)) : null;
         }
 
         /// <summary>
-        /// Determines if we're currently in the Virtual Paradise path.
+        /// Translates a <see cref="SysVer"/> into a semantic version compliant <see cref="SemVer"/>.
         /// </summary>
-        /// <returns>Returns <see langword="true"/> if <see cref="ExePath"/> exists, <see langword="false"/> otherwise.</returns>
-        public static bool IsInVpPath() =>
-            File.Exists(ExePath);
+        /// <param name="version">The <see cref="SysVer"/> to translate.</param>
+        /// <returns>Returns a <see cref="SemVer"/> representing the <see cref="SysVer"/>.</returns>
+        private static SemVer GetSemVerFromSystemVersion(SysVer version) =>
+            new SemVer(version.Major, version.Minor, version.Build);
 
         /// <summary>
         /// Launches Virtual Paradise.
         /// </summary>
         /// <param name="args">The command-line arguments.</param>
-        public static void Launch(params string[] args)
+        public void Launch(params string[] args)
         {
-            if (IsInVpPath())
-            {
-                Process.Start(ExePath, String.Join(" ", args));
-            }
+            Process.Start(this.FileInfo.FullName, String.Join(" ", args));
         }
 
         #endregion
