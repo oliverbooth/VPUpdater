@@ -175,4 +175,7 @@ Current version: {0}</value>
   <data name="WaitingForSetup" xml:space="preserve">
     <value>Waiting for setup to complete...</value>
   </data>
+  <data name="VpExeCheck" xml:space="preserve">
+    <value>Checking for {0}...</value>
+  </data>
 </root>
