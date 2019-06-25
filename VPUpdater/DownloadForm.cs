@@ -54,7 +54,7 @@ namespace VPUpdater
             this.Show();
 
             this.labelDownloading.Text = String.Format(Resources.VpExeCheck, VirtualParadise.Exe);
-            this.progressBar.Style = ProgressBarStyle.Marquee;
+            this.progressBar.Style     = ProgressBarStyle.Marquee;
 
             if (!VirtualParadise.IsInVpPath())
             {
@@ -76,7 +76,6 @@ namespace VPUpdater
         /// </summary>
         private async void DoUpdateCheck()
         {
-
             this.labelDownloading.Text = Resources.UpdateCheck;
 
             bool update = await CheckForUpdates();
@@ -86,9 +85,9 @@ namespace VPUpdater
                 // No update is available - the client is up to date
 
                 this.labelDownloading.Text = Resources.UpToDate;
-                this.progressBar.Style = ProgressBarStyle.Continuous;
-                this.progressBar.Value = this.progressBar.Maximum;
-                this.buttonCancel.Text = Resources.Close;
+                this.progressBar.Style     = ProgressBarStyle.Continuous;
+                this.progressBar.Value     = this.progressBar.Maximum;
+                this.buttonCancel.Text     = Resources.Close;
 
                 // Launch as normal
                 VirtualParadise.Launch(this.commandLineArgs);
@@ -116,14 +115,14 @@ namespace VPUpdater
 
             this.client.DownloadFileCompleted += this.LaunchSetup;
             this.client.DownloadProgressChanged += (o, args) =>
-            {
-                // Update progress for user
-                this.progressBar.Style = ProgressBarStyle.Continuous;
-                this.progressBar.Value = args.ProgressPercentage;
-                this.labelDownloading.Text =
-                    String.Format(Resources.DownloadingUpdate,
-                                  args.ProgressPercentage);
-            };
+                                                   {
+                                                       // Update progress for user
+                                                       this.progressBar.Style = ProgressBarStyle.Continuous;
+                                                       this.progressBar.Value = args.ProgressPercentage;
+                                                       this.labelDownloading.Text =
+                                                           String.Format(Resources.DownloadingUpdate,
+                                                                         args.ProgressPercentage);
+                                                   };
 
             this.setupTempFile = Path.GetTempPath() + Path.DirectorySeparatorChar + Path.GetFileName(downloadLink);
             try
