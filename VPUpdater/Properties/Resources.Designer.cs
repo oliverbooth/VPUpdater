@@ -202,6 +202,15 @@ namespace VPUpdater.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Checking for {0}....
+        /// </summary>
+        internal static string VpExeCheck {
+            get {
+                return ResourceManager.GetString("VpExeCheck", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} was not found. The updater cannot continue..
         /// </summary>
         internal static string VpExeNotFound {

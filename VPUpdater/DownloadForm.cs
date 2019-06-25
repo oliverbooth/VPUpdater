@@ -49,9 +49,12 @@ namespace VPUpdater
 
         #region Methods
 
-        private async void DownloadForm_Load(object sender, EventArgs e)
+        private void DownloadForm_Load(object sender, EventArgs e)
         {
             this.Show();
+
+            this.labelDownloading.Text = String.Format(Resources.VpExeCheck, VirtualParadise.Exe);
+            this.progressBar.Style     = ProgressBarStyle.Marquee;
 
             if (!VirtualParadise.IsInVpPath())
             {
@@ -65,6 +68,14 @@ namespace VPUpdater
                 return;
             }
 
+            this.DoUpdateCheck();
+        }
+
+        /// <summary>
+        /// Performs the complete update routine.
+        /// </summary>
+        private async void DoUpdateCheck()
+        {
             this.labelDownloading.Text = Resources.UpdateCheck;
 
             bool update = await CheckForUpdates();

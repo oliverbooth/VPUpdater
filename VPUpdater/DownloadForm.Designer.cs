@@ -50,16 +50,16 @@
             this.labelDownloading.AutoSize = true;
             this.labelDownloading.Location = new System.Drawing.Point(12, 9);
             this.labelDownloading.Name = "labelDownloading";
-            this.labelDownloading.Size = new System.Drawing.Size(107, 13);
+            this.labelDownloading.Size = new System.Drawing.Size(38, 13);
             this.labelDownloading.TabIndex = 4;
-            this.labelDownloading.Text = "Downloading setup...";
+            this.labelDownloading.Text = "Ready";
             // 
             // progressBar
             // 
             this.progressBar.Location = new System.Drawing.Point(12, 25);
             this.progressBar.Name = "progressBar";
             this.progressBar.Size = new System.Drawing.Size(312, 23);
-            this.progressBar.Style = System.Windows.Forms.ProgressBarStyle.Marquee;
+            this.progressBar.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
             this.progressBar.TabIndex = 3;
             // 
             // DownloadForm
