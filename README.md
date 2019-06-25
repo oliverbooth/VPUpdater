@@ -25,7 +25,7 @@ Now when you launch "Virtual Paradise", it will launch the updater first. If the
 |.NET|4.6|
 
 ## Nuget package dependencies
-|Depdendencny|Version|
+|Depdendency|Version|
 |- |- |
 |[AngleSharp](https://www.nuget.org/packages/AngleSharp/0.12.1)|0.12.1|
 |[SemanticVersioning](https://www.nuget.org/packages/SemanticVersioning/1.2.0)|1.2.0|
