@@ -1,0 +1,189 @@
+﻿#region Copyright
+
+// -----------------------------------------------------------------------
+//  <copyright file="Updater.cs" company="VPUpdater">
+//      (C) 2019 Oliver Booth. All rights reserved.
+//  </copyright>
+// -----------------------------------------------------------------------
+
+#endregion
+
+namespace VPUpdater
+{
+    #region Using Directives
+
+    using System;
+    using System.Diagnostics;
+    using System.IO;
+    using System.Linq;
+    using System.Net;
+    using System.Text.RegularExpressions;
+    using System.Threading.Tasks;
+    using System.Windows.Forms;
+    using AngleSharp;
+    using AngleSharp.Dom;
+    using AngleSharp.Io;
+    using Properties;
+    using SemVer = SemVer.Version;
+
+    #endregion
+
+    /// <summary>
+    /// Represents an updater.
+    /// </summary>
+    public class Updater : IDisposable
+    {
+        #region Fields
+
+        /// <summary>
+        /// The <see cref="VirtualParadise"/> instance.
+        /// </summary>
+        private readonly VirtualParadise virtualParadise;
+
+        /// <summary>
+        /// The web client instance.
+        /// </summary>
+        private WebClient webClient = new WebClient();
+
+        /// <summary>
+        /// The setup path.
+        /// </summary>
+        private string setupPath;
+
+        #endregion
+
+        #region Constructors
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Updater"/> class.
+        /// </summary>
+        /// <param name="virtualParadise">The <see cref="VirtualParadise"/> instance.</param>
+        public Updater(VirtualParadise virtualParadise)
+        {
+            this.virtualParadise = virtualParadise;
+        }
+
+        #endregion
+
+        #region Events
+
+        /// <summary>
+        /// Raised when an internal <see cref="WebClient"/> download progress has changed.
+        /// </summary>
+        public DownloadProgressChangedEventHandler WebClientProgressChanged;
+
+        #endregion
+
+        #region Methods
+
+        /// <summary>
+        /// Cancels any updates in progress.
+        /// </summary>
+        public void Cancel()
+        {
+            this.webClient?.CancelAsync();
+        }
+
+        /// <inheritdoc/>
+        public void Dispose()
+        {
+            this.webClient?.Dispose();
+        }
+
+        /// <summary>
+        /// Downloads the link to the latest
+        /// </summary>
+        /// <param name="uri"></param>
+        /// <returns></returns>
+        public async Task<string> Download(Uri uri)
+        {
+            if (uri.Host != VirtualParadise.Hostname && !uri.Host.EndsWith('.' + VirtualParadise.Hostname))
+            {
+                throw new UriFormatException(String.Format(Resources.UriNotFromVp, VirtualParadise.Hostname));
+            }
+
+            string setupFilename = Path.GetFileName(uri.ToString());
+            string tempFilename  = Path.GetTempPath() + Path.DirectorySeparatorChar + setupFilename;
+
+            using (WebClient client = new WebClient())
+            {
+                client.DownloadProgressChanged += this.WebClientProgressChanged;
+                this.webClient                 =  client;
+                await client.DownloadFileTaskAsync(uri, tempFilename);
+            }
+
+            if (!File.Exists(tempFilename))
+            {
+                throw new FileNotFoundException(String.Format(Resources.FileNotFound, setupFilename));
+            }
+
+            this.setupPath = tempFilename;
+            return tempFilename;
+        }
+
+        /// <summary>
+        /// Fetches the latest version of Virtual Paradise.
+        /// </summary>
+        /// <returns>Gets the version string of the latest stable Virtual Paradise.</returns>
+        public async Task<SemVer> FetchLatest()
+        {
+            using (WebClient client = new WebClient())
+            {
+                client.DownloadProgressChanged += this.WebClientProgressChanged;
+                this.webClient                 =  client;
+
+                Uri    uri           = new Uri(VirtualParadise.Uri, @"version.txt");
+                string versionString = await client.DownloadStringTaskAsync(uri);
+
+                return new SemVer(versionString);
+            }
+        }
+
+        /// <summary>
+        /// Fetches the Uri of the latest download from the Virtual Paradise download page.
+        /// </summary>
+        /// <returns>Returns a <see cref="Uri"/> containing the download link.</returns>
+        public async Task<Uri> FetchDownloadLink()
+        {
+            IConfiguration   config          = Configuration.Default.WithDefaultLoader();
+            IBrowsingContext context         = BrowsingContext.New(config);
+            Uri              downloadPageUri = new Uri(VirtualParadise.Uri, @"Download");
+
+            using (IDocument document = await context.OpenAsync(downloadPageUri.ToString()))
+            {
+                const string selector   = @".download a.btn";
+                string       systemArch = Helper.GetMachineArch().ToString();
+
+                IHtmlCollection<IElement> cells = document.QuerySelectorAll(selector);
+                IElement a =
+                    cells.FirstOrDefault(c =>
+                                             Regex.Match(c.GetAttribute("href"),
+                                                         $"windows_{Regex.Escape(systemArch)}")
+                                                  .Success);
+
+                string href = a?.GetAttribute("href") ?? "";
+                return new Uri(href);
+            }
+        }
+
+        /// <summary>
+        /// Launches the setup.
+        /// </summary>
+        public async Task Launch()
+        {
+            if (!File.Exists(this.setupPath))
+            {
+                throw new FileNotFoundException(String.Format(Resources.FileNotFound, Path.GetFileName(this.setupPath)));
+            }
+
+            await Task.Run(() =>
+                           {
+                               Process process = new Process {StartInfo = {FileName = this.setupPath}};
+                               process.Start();
+                               process.WaitForExit();
+                           });
+        }
+
+        #endregion
+    }
+}
