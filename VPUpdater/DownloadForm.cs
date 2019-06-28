@@ -99,10 +99,11 @@ namespace VPUpdater
         /// <summary>
         /// Checks for a Virtual Paradise update.
         /// </summary>
+        /// <param name="channel">The update channel to use.</param>
         /// <returns>Returns <see langword="true"/> if the there is an updated and the user accepted, <see langword="false"/> otherwise.</returns>
-        private async Task<Version> CheckForUpdates()
+        private async Task<Version> CheckForUpdates(UpdateChannel channel)
         {
-            return await this.updater.FetchLatest();
+            return await this.updater.FetchLatest(channel);
         }
 
         /// <summary>
@@ -110,8 +111,10 @@ namespace VPUpdater
         /// </summary>
         /// <param name="sender">The event sender.</param>
         /// <param name="e">The event data.</param>
-        private void DownloadForm_Load(object sender, EventArgs e)
+        private async void DownloadForm_Load(object sender, EventArgs e)
         {
+            await this.updater.LoadDefaultConfiguration();
+
             this.Show();
             this.Run();
         }
@@ -138,10 +141,14 @@ namespace VPUpdater
                 return;
             }
 
-            this.labelDownloading.Text = Resources.UpdateCheck;
+            UpdateChannel channel = (int)this.updater.Config["stable_only"] == 1
+                ? UpdateChannel.Stable
+                : UpdateChannel.PreRelease;
 
+            this.labelDownloading.Text = Resources.UpdateCheck;
             Version currentVersion = this.virtualParadise.Version;
-            Version latestVersion  = await this.CheckForUpdates();
+            Version latestVersion  = await this.CheckForUpdates(channel);
+
             if (currentVersion < latestVersion)
             {
                 DialogResult result = MessageBox.Show(
@@ -174,9 +181,10 @@ namespace VPUpdater
 
             this.labelDownloading.Text = Resources.DownloadLinkFetch;
             Uri downloadUri;
+
             try
             {
-                downloadUri = await this.updater.FetchDownloadLink();
+                downloadUri = await this.updater.FetchDownloadLink(channel);
             }
             catch (Exception ex)
             {

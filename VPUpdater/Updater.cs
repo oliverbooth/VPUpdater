@@ -13,6 +13,7 @@ namespace VPUpdater
     #region Using Directives
 
     using System;
+    using System.Collections.Generic;
     using System.Diagnostics;
     using System.IO;
     using System.Linq;
@@ -20,8 +21,10 @@ namespace VPUpdater
     using System.ServiceModel.Syndication;
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
+    using System.Windows.Forms;
     using System.Xml;
     using AngleSharp;
+    using AngleSharp.Common;
     using AngleSharp.Dom;
     using Properties;
     using SemVer = SemVer.Version;
@@ -77,6 +80,15 @@ namespace VPUpdater
         /// Raised when an internal <see cref="WebClient"/> download progress has changed.
         /// </summary>
         public DownloadProgressChangedEventHandler WebClientProgressChanged;
+
+        #endregion
+
+        #region Properties
+
+        /// <summary>
+        /// Gets the configuration for the updater.
+        /// </summary>
+        public UpdaterConfig Config { get; private set; }
 
         #endregion
 
@@ -136,28 +148,16 @@ namespace VPUpdater
             switch (channel)
             {
                 case UpdateChannel.PreRelease:
-                    string rssUri = new Uri(VirtualParadise.Uri, @"/edwin/feed").ToString();
-                    using (XmlReader rssReader = XmlReader.Create(rssUri))
+                    SyndicationItem item = this.GetLatestVirtualParadisePost(out Match match);
+
+                    if (!(item is null || match is null))
                     {
-                        SyndicationFeed feed  = SyndicationFeed.Load(rssReader);
-                        Match           match = null;
-                        SyndicationItem item =
-                            feed.Items.FirstOrDefault(i => Regex.Match(i.Title.Text, @"Virtual Paradise").Success &&
-                                                           (match =
-                                                               Regex.Match(
-                                                                   i.Title.Text, SemVerRegex,
-                                                                   RegexOptions.IgnoreCase))
-                                                          .Success);
-
-                        if (!(item is null || match is null))
-                        {
-                            // Return the version
-                            return new SemVer(match.Value);
-                        }
-
-                        // Return the latest stable instead
-                        return await this.FetchLatest();
+                        // Return the version
+                        return new SemVer(match.Value);
                     }
+
+                    // Return the latest stable instead
+                    return await this.FetchLatest();
 
                 case UpdateChannel.Stable:
                 default:
@@ -178,30 +178,81 @@ namespace VPUpdater
         /// Fetches the Uri of the latest download from the Virtual Paradise download page.
         /// </summary>
         /// <param name="channel">The update channel to use.</param>
-        /// <param name="item">If <paramref name="channel"/> is set to <see cref="UpdateChannel.PreRelease"/>, the method will parse
-        /// this <see cref="SyndicationItem"/> for a valid download URI.</param>
         /// <returns>Returns a <see cref="Uri"/> containing the download link.</returns>
-        public async Task<Uri> FetchDownloadLink(UpdateChannel   channel = UpdateChannel.Stable,
-                                                 SyndicationItem item    = null)
+        public async Task<Uri> FetchDownloadLink(UpdateChannel channel = UpdateChannel.Stable)
         {
-            IConfiguration   config          = Configuration.Default.WithDefaultLoader();
-            IBrowsingContext context         = BrowsingContext.New(config);
-            Uri              downloadPageUri = new Uri(VirtualParadise.Uri, @"Download");
+            IConfiguration   config  = Configuration.Default.WithDefaultLoader();
+            IBrowsingContext context = BrowsingContext.New(config);
 
-            using (IDocument document = await context.OpenAsync(downloadPageUri.ToString()))
+            switch (channel)
             {
-                const string selector   = @".download a.btn";
-                string       systemArch = Helper.GetMachineArch().ToString();
+                case UpdateChannel.PreRelease:
 
-                IHtmlCollection<IElement> cells = document.QuerySelectorAll(selector);
-                IElement a =
-                    cells.FirstOrDefault(c =>
-                                             Regex.Match(c.GetAttribute("href"),
-                                                         $"windows_{Regex.Escape(systemArch)}")
-                                                  .Success);
+                    // The RSS feed for the blog does not use <content> as a tag, but instead
+                    // uses <content:encoded> - as such, we'll have to parse the XML manually
+                    string rssUri = new Uri(VirtualParadise.Uri, @"edwin/feed").ToString();
+                    using (XmlReader rssReader = XmlReader.Create(rssUri))
+                    {
+                        XmlDocument xmlDocument = new XmlDocument();
+                        xmlDocument.Load(rssReader);
 
-                string href = a?.GetAttribute("href") ?? "";
-                return new Uri(href);
+                        XmlNodeList items   = xmlDocument.GetElementsByTagName("item");
+                        XmlNode     useNode = null;
+
+                        foreach (XmlNode node in items)
+                        {
+                            string title = node["title"]?.InnerText ?? "";
+                            bool match = Regex.Match(title, @"Virtual Paradise").Success &&
+                                         Regex.Match(title, SemVerRegex).Success;
+
+                            if (match)
+                            {
+                                useNode = node;
+                                break;
+                            }
+                        }
+
+                        if (useNode is null)
+                        {
+                            return null;
+                        }
+
+                        using (IDocument document = await context.OpenAsync(req => req.Content(useNode.InnerText)))
+                        {
+                            const string selector   = @"a:last-child";
+                            string       systemArch = Helper.GetMachineArch().ToString();
+
+                            IHtmlCollection<IElement> cells = document.QuerySelectorAll(selector);
+                            IElement a =
+                                cells.FirstOrDefault(c =>
+                                                         Regex.Match(c.GetAttribute("href"),
+                                                                     $"windows_{Regex.Escape(systemArch)}")
+                                                              .Success);
+
+                            string href = a?.GetAttribute("href") ?? "";
+                            return new Uri(href);
+                        }
+                    }
+
+                case UpdateChannel.Stable:
+                default:
+                    Uri downloadPageUri = new Uri(VirtualParadise.Uri, @"Download");
+
+                    using (IDocument document = await context.OpenAsync(downloadPageUri.ToString()))
+                    {
+                        const string selector   = @".download a.btn";
+                        string       systemArch = Helper.GetMachineArch().ToString();
+
+                        IHtmlCollection<IElement> cells = document.QuerySelectorAll(selector);
+                        IElement a =
+                            cells.FirstOrDefault(c =>
+                                                     Regex.Match(c.GetAttribute("href"),
+                                                                 $"windows_{Regex.Escape(systemArch)}")
+                                                          .Success);
+
+                        string href = a?.GetAttribute("href") ?? "";
+                        return new Uri(href);
+                    }
             }
         }
 
@@ -222,6 +273,41 @@ namespace VPUpdater
                                process.Start();
                                process.WaitForExit();
                            });
+        }
+
+        /// <summary>
+        /// Loads the configuration file, and sets any un-set default configuration values.
+        /// </summary>
+        public async Task LoadDefaultConfiguration()
+        {
+            this.Config                = await UpdaterConfig.Load();
+            this.Config["stable_only"] = this.Config["stable_only", 1];
+
+            await this.Config.Save();
+        }
+
+        /// <summary>
+        /// Gets the latest Virtual Paradise post from Edwin's blog.
+        /// </summary>
+        /// <returns>Returns an instance of <see cref="SyndicationItem"/>.</returns>
+        private SyndicationItem GetLatestVirtualParadisePost(out Match match)
+        {
+            string rssUri = new Uri(VirtualParadise.Uri, @"edwin/feed").ToString();
+            using (XmlReader rssReader = XmlReader.Create(rssUri))
+            {
+                Match           localMatch = null;
+                SyndicationFeed feed       = SyndicationFeed.Load(rssReader);
+                SyndicationItem item =
+                    feed.Items.FirstOrDefault(i => Regex.Match(i.Title.Text, @"Virtual Paradise").Success &&
+                                                   (localMatch =
+                                                       Regex.Match(
+                                                           i.Title.Text, SemVerRegex,
+                                                           RegexOptions.IgnoreCase))
+                                                  .Success);
+
+                match = localMatch;
+                return item;
+            }
         }
 
         #endregion
