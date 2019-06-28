@@ -113,6 +113,11 @@ namespace VPUpdater
         /// <returns>Returns a new instance of <see cref="VirtualParadise"/>, or <see langword="null"/> on failure.</returns>
         public static VirtualParadise GetCurrent(string path)
         {
+            if (!File.Exists(path) && !Directory.Exists(path))
+            {
+                return null;
+            }
+
             FileAttributes attributes = File.GetAttributes(path);
             if (!attributes.HasFlag(FileAttributes.Directory))
             {
