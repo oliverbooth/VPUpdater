@@ -10,7 +10,7 @@ This tool is directly inspired by [VPUpdater](https://github.com/Evonex/VPUpdate
 I've rewritten the tool from the ground up to correct all of these issues.
 
 ## How to use
-1. Download the [latest release](https://github.com/oliverbooth/VPUpdater) and extract the files to your Virtual Paradise directory
+1. Download the [latest release](https://github.com/oliverbooth/VPUpdater/releases/latest) and extract the files to your Virtual Paradise directory
 2. Create a shortcut to VPUpdater.exe
 3. Rename the shortcut to something meaningful (you know... like `Virtual Paradise`)
 4. Place that shortcut on your desktop / taskbar / useful location.
