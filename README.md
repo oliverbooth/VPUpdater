@@ -20,6 +20,18 @@ I've rewritten the tool from the ground up in C# to correct all of these issues.
 
 Now when you launch "Virtual Paradise", it will launch the updater first. If there are no updates, the tool with simply launch Virtual Paradise. If there is an update, it will download the latest setup and you can go from there.
 
+## How to enable pre-release builds
+Edit (or create) file `VPUpdater.cfg` in the Virtual Paradise directory with the line:
+```properties
+stable_only=0
+```
+The next time the updater runs, it will check for pre-release builds.
+
+## Known issues
+* If pre-release builds are enabled, it will always say there is an update even if you have it. Pre-release builds install into `%PROGRAMFILES%\Virtual Paradise (pre-release)`, where VPUpdater probably *isn't*. Possible fix: Have the app scan this directory too for the Virtual Paradise version number.
+
+* An exception is thrown trying to fetch the version number of a pre-release install of Virtual Paradise. Possible fix (?): Truncate string if it contains `"alpha"` or `"beta"` perhaps?
+
 ## Building prerequisites
 |Prerequisite|Version|
 |- |- |
