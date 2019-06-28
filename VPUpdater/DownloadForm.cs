@@ -141,7 +141,7 @@ namespace VPUpdater
             this.labelDownloading.Text = Resources.UpdateCheck;
 
             Version currentVersion = this.virtualParadise.Version;
-            Version latestVersion  = await this.updater.FetchLatest();
+            Version latestVersion  = await this.CheckForUpdates();
             if (currentVersion < latestVersion)
             {
                 DialogResult result = MessageBox.Show(
