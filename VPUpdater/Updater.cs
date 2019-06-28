@@ -133,36 +133,36 @@ namespace VPUpdater
         /// <returns>Gets the version string of the latest stable Virtual Paradise.</returns>
         public async Task<SemVer> FetchLatest(UpdateChannel channel = UpdateChannel.Stable)
         {
-            using (WebClient client = new WebClient())
+            switch (channel)
             {
-                switch (channel)
-                {
-                    case UpdateChannel.PreRelease:
-                        string rssUri = new Uri(VirtualParadise.Uri, @"/edwin/feed").ToString();
-                        using (XmlReader rssReader = XmlReader.Create(rssUri))
+                case UpdateChannel.PreRelease:
+                    string rssUri = new Uri(VirtualParadise.Uri, @"/edwin/feed").ToString();
+                    using (XmlReader rssReader = XmlReader.Create(rssUri))
+                    {
+                        SyndicationFeed feed  = SyndicationFeed.Load(rssReader);
+                        Match           match = null;
+                        SyndicationItem item =
+                            feed.Items.FirstOrDefault(i => Regex.Match(i.Title.Text, @"Virtual Paradise").Success &&
+                                                           (match =
+                                                               Regex.Match(
+                                                                   i.Title.Text, SemVerRegex,
+                                                                   RegexOptions.IgnoreCase))
+                                                          .Success);
+
+                        if (!(item is null || match is null))
                         {
-                            SyndicationFeed feed  = SyndicationFeed.Load(rssReader);
-                            Match           match = null;
-                            SyndicationItem item =
-                                feed.Items.FirstOrDefault(i => Regex.Match(i.Title.Text, @"Virtual Paradise").Success &&
-                                                               (match =
-                                                                   Regex.Match(
-                                                                       i.Title.Text, SemVerRegex,
-                                                                       RegexOptions.IgnoreCase))
-                                                              .Success);
-
-                            if (!(item is null || match is null))
-                            {
-                                // Return the version
-                                return new SemVer(match.Value);
-                            }
-
-                            // Return the latest stable instead
-                            return await this.FetchLatest();
+                            // Return the version
+                            return new SemVer(match.Value);
                         }
 
-                    case UpdateChannel.Stable:
-                    default:
+                        // Return the latest stable instead
+                        return await this.FetchLatest();
+                    }
+
+                case UpdateChannel.Stable:
+                default:
+                    using (WebClient client = new WebClient())
+                    {
                         client.DownloadProgressChanged += this.WebClientProgressChanged;
                         this.webClient                 =  client;
 
@@ -170,7 +170,7 @@ namespace VPUpdater
                         string versionString = await client.DownloadStringTaskAsync(uri);
 
                         return new SemVer(versionString);
-                }
+                    }
             }
         }
 
