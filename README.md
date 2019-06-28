@@ -1,7 +1,7 @@
 # VPUpdater
-![https://github.com/oliverbooth/VPUpdater/releases/latest](https://img.shields.io/github/release/oliverbooth/VPUpdater.svg)
-![https://github.com/oliverbooth/VPUpdater/issues](https://img.shields.io/github/issues/oliverbooth/VPUpdater.svg)
-![https://github.com/oliverbooth/VPUpdater/blob/master/LICENSE](https://img.shields.io/github/license/oliverbooth/VPUpdater.svg)
+[![](https://img.shields.io/github/release/oliverbooth/VPUpdater.svg)](https://github.com/oliverbooth/VPUpdater/releases/latest)
+[![](https://img.shields.io/github/issues/oliverbooth/VPUpdater.svg)](https://github.com/oliverbooth/VPUpdater/issues)
+[![](https://img.shields.io/github/license/oliverbooth/VPUpdater.svg)](https://github.com/oliverbooth/VPUpdater/blob/master/LICENSE)
 
 Automatic updater for Virtual Paradise
 
