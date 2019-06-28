@@ -271,6 +271,17 @@ namespace VPUpdater.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Could not create VirtualParadise object:
+        ///
+        ///{0}.
+        /// </summary>
+        internal static string VpObjectBuildError {
+            get {
+                return ResourceManager.GetString("VpObjectBuildError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Waiting for setup to complete....
         /// </summary>
         internal static string WaitingForSetup {
