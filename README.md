@@ -2,14 +2,12 @@
 Automatic updater for Virtual Paradise
 
 ## About
-This tool is directly inspired by [VPUpdater](https://github.com/Evonex/VPUpdater) by Evonex. However since its last commit 4 years prior, a lot has changed and there were a lot of issues.
+This tool is directly inspired by [VPUpdater](https://github.com/Evonex/VPUpdater) by Evonex. However since its last commit 4 years prior, a lot has changed and there were a few issues:
 
-* The tool did not support the 64-bit version of Virtual Paradise.
-* The original dev committed build output and binaries to SCM.
-* It is incompatible with new the VP download flow.
-* It was written in VB.NET (this isn't necessarily bad, but C# is more properly supported by the community.)
+* The tool did not support the 64-bit version of Virtual Paradise
+* It is incompatible with new the download & install flow (the tool expected to download and extract a `.zip` file, where Virtual Paradise now uses a Squirrel installer)
 
-I've rewritten the tool from the ground up in C# to correct all of these issues.
+I've rewritten the tool from the ground up to correct all of these issues.
 
 ## How to use
 1. Download the [latest release](https://github.com/oliverbooth/VPUpdater) and extract the files to your Virtual Paradise directory
