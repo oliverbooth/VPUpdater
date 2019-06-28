@@ -80,6 +80,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ControlExtensions.cs" />
     <Compile Include="UpdateChannel.cs" />
     <Compile Include="MachineArch.cs" />
     <Compile Include="Helper.cs" />

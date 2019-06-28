@@ -13,9 +13,6 @@ namespace VPUpdater
     #region Using Directives
 
     using System;
-    using System.ComponentModel;
-    using System.Diagnostics;
-    using System.IO;
     using System.Net;
     using System.Threading.Tasks;
     using System.Windows.Forms;
@@ -75,11 +72,31 @@ namespace VPUpdater
                 ? UpdateChannel.Stable
                 : UpdateChannel.PreRelease;
 
-            VirtualParadise virtualParadise = channel == UpdateChannel.PreRelease
-                ? VirtualParadise.GetPreRelease()
-                : VirtualParadise.GetCurrent();
+            try
+            {
+                VirtualParadise virtualParadise = VirtualParadise.GetCurrent();
+                if (channel == UpdateChannel.PreRelease)
+                {
+                    VirtualParadise preVirtualParadise = VirtualParadise.GetPreRelease();
+                    if (!(preVirtualParadise is null))
+                    {
+                        virtualParadise = preVirtualParadise;
+                    }
+                }
 
-            return new DownloadForm(args, virtualParadise, channel);
+                return new DownloadForm(args, virtualParadise, channel);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(String.Format(Resources.VpObjectBuildError, ex.Message),
+                                Resources.Error,
+                                MessageBoxButtons.OK,
+                                MessageBoxIcon.Error);
+
+                // There's nothing we can do from here
+                Environment.Exit(0);
+                return null;
+            }
         }
 
         /// <summary>
@@ -135,24 +152,34 @@ namespace VPUpdater
         /// </summary>
         /// <param name="sender">The event sender.</param>
         /// <param name="e">The event data.</param>
-        private void DownloadForm_Load(object sender, EventArgs e)
+        private async void DownloadForm_Load(object sender, EventArgs e)
         {
             this.Show();
-            this.Run();
+            this.InvokeIfRequired(async () => await this.Run());
         }
 
         /// <summary>
         /// Performs the update routine.
         /// </summary>
-        private async void Run()
+        private async Task Run()
         {
-            this.labelDownloading.Text = String.Format(Resources.VpExeCheck, VirtualParadise.ExeFilename);
-            this.progressBar.Style     = ProgressBarStyle.Marquee;
+            this.InvokeIfRequired(
+                () =>
+                {
+                    this.labelDownloading.Text =
+                        String.Format(Resources.VpExeCheck, VirtualParadise.ExeFilename);
+
+                    this.progressBar.Style = ProgressBarStyle.Marquee;
+                });
 
             if (this.virtualParadise == null)
             {
-                this.progressBar.Style = ProgressBarStyle.Continuous;
-                this.progressBar.Value = 0;
+                this.InvokeIfRequired(
+                    () =>
+                    {
+                        this.progressBar.Style = ProgressBarStyle.Continuous;
+                        this.progressBar.Value = 0;
+                    });
 
                 MessageBox.Show(String.Format(Resources.VpExeNotFound, VirtualParadise.ExeFilename),
                                 Resources.Error,
@@ -163,7 +190,7 @@ namespace VPUpdater
                 return;
             }
 
-            this.labelDownloading.Text = Resources.UpdateCheck;
+            this.InvokeIfRequired(() => { this.labelDownloading.Text = Resources.UpdateCheck; });
             Version currentVersion = this.virtualParadise.Version;
             Version latestVersion  = await this.CheckForUpdates(this.updateChannel);
 
@@ -186,10 +213,14 @@ namespace VPUpdater
             else
             {
                 // Everything is up to date!
-                this.labelDownloading.Text = Resources.UpToDate;
-                this.progressBar.Style     = ProgressBarStyle.Continuous;
-                this.progressBar.Value     = this.progressBar.Maximum;
-                this.buttonCancel.Text     = Resources.Close;
+                this.InvokeIfRequired(
+                    () =>
+                    {
+                        this.labelDownloading.Text = Resources.UpToDate;
+                        this.progressBar.Style     = ProgressBarStyle.Continuous;
+                        this.progressBar.Value     = this.progressBar.Maximum;
+                        this.buttonCancel.Text     = Resources.Close;
+                    });
 
                 this.virtualParadise.Launch(this.commandLineArgs);
 
@@ -197,7 +228,7 @@ namespace VPUpdater
                 return;
             }
 
-            this.labelDownloading.Text = Resources.DownloadLinkFetch;
+            this.InvokeIfRequired(() => { this.labelDownloading.Text = Resources.DownloadLinkFetch; });
             Uri downloadUri;
 
             try
@@ -255,8 +286,12 @@ namespace VPUpdater
                 return;
             }
 
-            this.progressBar.Style     = ProgressBarStyle.Marquee;
-            this.labelDownloading.Text = Resources.WaitingForSetup;
+            this.InvokeIfRequired(
+                () =>
+                {
+                    this.progressBar.Style     = ProgressBarStyle.Marquee;
+                    this.labelDownloading.Text = Resources.WaitingForSetup;
+                });
 
             try
             {
@@ -296,9 +331,14 @@ namespace VPUpdater
         private void WebClientProgressChanged(object sender, DownloadProgressChangedEventArgs e)
         {
             // Update progress for user
-            this.progressBar.Style     = ProgressBarStyle.Continuous;
-            this.progressBar.Value     = e.ProgressPercentage;
-            this.labelDownloading.Text = String.Format(Resources.DownloadingUpdate, e.ProgressPercentage);
+            this.InvokeIfRequired(
+                () =>
+                {
+                    this.progressBar.Style = ProgressBarStyle.Continuous;
+                    this.progressBar.Value = e.ProgressPercentage;
+                    this.labelDownloading.Text =
+                        String.Format(Resources.DownloadingUpdate, e.ProgressPercentage);
+                });
         }
 
         #endregion

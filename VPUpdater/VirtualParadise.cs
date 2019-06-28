@@ -52,15 +52,33 @@ namespace VPUpdater
         /// <param name="current">The file information for Virtual Paradise.</param>
         private VirtualParadise(FileInfo current)
         {
-            // Virtual Paradise does not use the Semantic Version standard,
-            // but we can use System.Version as a middle-man, and build a SemVer-complaint
-            // version from its properties.
-            // Edwin pls. https://semver.org/ - you can thank me later.
             string fileVersion = FileVersionInfo.GetVersionInfo(current.FullName).FileVersion;
-            SysVer version     = SysVer.Parse(fileVersion);
-
             this.FileInfo = current;
-            this.Version  = GetSemVerFromSystemVersion(version);
+
+            try
+            {
+                // Virtual Paradise does not use the Semantic Version standard,
+                // but we can use System.Version as a middle-man, and build a SemVer-complaint
+                // version from its properties.
+                // Edwin pls. https://semver.org/ - you can thank me later.
+                SysVer version = SysVer.Parse(fileVersion);
+                this.Version = GetSemVerFromSystemVersion(version);
+            }
+            catch
+            {
+                try
+                {
+                    // pre-release builds *seem* to use Semantic Version strings
+                    // and so if System.Version failed to parse, we can just build
+                    // a SemVer object immediately
+                    this.Version = new SemVer(fileVersion);
+                }
+                catch
+                {
+                    // if THAT fails, then I'll need to come back to this...
+                    throw new Exception(@"Could not parse version string.");
+                }
+            }
         }
 
         #endregion

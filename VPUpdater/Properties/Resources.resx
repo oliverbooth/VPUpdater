@@ -199,4 +199,9 @@ Current version: {0}</value>
   <data name="UriNotFromVp" xml:space="preserve">
     <value>The provided download URI is not from {0}.</value>
   </data>
+  <data name="VpObjectBuildError" xml:space="preserve">
+      <value>Could not create VirtualParadise object:
+
+{0}</value>
+  </data>
 </root>
