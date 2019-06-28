@@ -27,11 +27,6 @@ stable_only=0
 ```
 The next time the updater runs, it will check for pre-release builds.
 
-## Known issues
-* If pre-release builds are enabled, it will always say there is an update even if you have it. Pre-release builds install into `%PROGRAMFILES%\Virtual Paradise (pre-release)`, where VPUpdater probably *isn't*. Possible fix: Have the app scan this directory too for the Virtual Paradise version number.
-
-* An exception is thrown trying to fetch the version number of a pre-release install of Virtual Paradise. Possible fix (?): Truncate string if it contains `"alpha"` or `"beta"` perhaps?
-
 ## Building prerequisites
 |Prerequisite|Version|
 |- |- |
