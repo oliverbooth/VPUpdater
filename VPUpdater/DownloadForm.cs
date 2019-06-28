@@ -31,11 +31,10 @@ namespace VPUpdater
     {
         #region Fields
 
-        private          string          setupTempFile = "";
         private readonly string[]        commandLineArgs;
-        private readonly WebClient       client = new WebClient();
         private readonly Updater         updater;
         private readonly VirtualParadise virtualParadise;
+        private readonly UpdateChannel   updateChannel;
 
         #endregion
 
@@ -44,19 +43,44 @@ namespace VPUpdater
         /// <summary>
         /// Initializes a new instance of the <see cref="DownloadForm"/> class.
         /// </summary>
-        public DownloadForm(string[] args)
+        /// <param name="args">Command-line arguments to pass to Virtual Paradise.</param>
+        /// <param name="virtualParadise">The instance of <see cref="VirtualParadise"/> to use.</param>
+        /// <param name="channel">The update channel to use.</param>
+        private DownloadForm(string[] args, VirtualParadise virtualParadise, UpdateChannel channel)
         {
             this.InitializeComponent();
 
-            // Store CLI args as DI to pass to VP
             this.commandLineArgs = args;
-            this.virtualParadise = VirtualParadise.GetCurrent();
-            this.updater         = new Updater(this.virtualParadise);
+            this.virtualParadise = virtualParadise;
+            this.updateChannel   = channel;
+            this.updater         = new Updater(virtualParadise);
         }
 
         #endregion
 
         #region Methods
+
+        /// <summary>
+        /// Builds a <see cref="DownloadForm"/>.
+        /// </summary>
+        /// <param name="args">Command-line arguments to pass to Virtual Paradise.</param>
+        /// <returns>Returns a new instance of <see cref="DownloadForm"/>.</returns>
+        public static async Task<DownloadForm> Build(string[] args)
+        {
+            UpdaterConfig config = await UpdaterConfig.Load();
+
+            await config.LoadDefaults();
+
+            UpdateChannel channel = (int)config["stable_only", 1] == 1
+                ? UpdateChannel.Stable
+                : UpdateChannel.PreRelease;
+
+            VirtualParadise virtualParadise = channel == UpdateChannel.PreRelease
+                ? VirtualParadise.GetPreRelease()
+                : VirtualParadise.GetCurrent();
+
+            return new DownloadForm(args, virtualParadise, channel);
+        }
 
         /// <summary>
         /// Called when <see cref="buttonCancel"/> is clicked.
@@ -111,10 +135,8 @@ namespace VPUpdater
         /// </summary>
         /// <param name="sender">The event sender.</param>
         /// <param name="e">The event data.</param>
-        private async void DownloadForm_Load(object sender, EventArgs e)
+        private void DownloadForm_Load(object sender, EventArgs e)
         {
-            await this.updater.LoadDefaultConfiguration();
-
             this.Show();
             this.Run();
         }
@@ -141,13 +163,9 @@ namespace VPUpdater
                 return;
             }
 
-            UpdateChannel channel = (int)this.updater.Config["stable_only"] == 1
-                ? UpdateChannel.Stable
-                : UpdateChannel.PreRelease;
-
             this.labelDownloading.Text = Resources.UpdateCheck;
             Version currentVersion = this.virtualParadise.Version;
-            Version latestVersion  = await this.CheckForUpdates(channel);
+            Version latestVersion  = await this.CheckForUpdates(this.updateChannel);
 
             if (currentVersion < latestVersion)
             {
@@ -184,7 +202,7 @@ namespace VPUpdater
 
             try
             {
-                downloadUri = await this.updater.FetchDownloadLink(channel);
+                downloadUri = await this.updater.FetchDownloadLink(this.updateChannel);
             }
             catch (Exception ex)
             {

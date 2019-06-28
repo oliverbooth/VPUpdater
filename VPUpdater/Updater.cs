@@ -83,15 +83,6 @@ namespace VPUpdater
 
         #endregion
 
-        #region Properties
-
-        /// <summary>
-        /// Gets the configuration for the updater.
-        /// </summary>
-        public UpdaterConfig Config { get; private set; }
-
-        #endregion
-
         #region Methods
 
         /// <summary>
@@ -273,17 +264,6 @@ namespace VPUpdater
                                process.Start();
                                process.WaitForExit();
                            });
-        }
-
-        /// <summary>
-        /// Loads the configuration file, and sets any un-set default configuration values.
-        /// </summary>
-        public async Task LoadDefaultConfiguration()
-        {
-            this.Config                = await UpdaterConfig.Load();
-            this.Config["stable_only"] = this.Config["stable_only", 1];
-
-            await this.Config.Save();
         }
 
         /// <summary>

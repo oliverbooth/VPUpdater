@@ -14,6 +14,7 @@ namespace VPUpdater
 
     using System;
     using System.Linq;
+    using System.Threading.Tasks;
     using System.Windows.Forms;
 
     #endregion
@@ -27,13 +28,17 @@ namespace VPUpdater
         /// Application entry point.
         /// </summary>
         [STAThread]
-        private static void Main(string[] args)
+        private static async Task Main(string[] args)
         {
             args = args.Skip(1).ToArray();
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new DownloadForm(args));
+
+            using (DownloadForm form = await DownloadForm.Build(args))
+            {
+                Application.Run(form);
+            }
         }
     }
 }

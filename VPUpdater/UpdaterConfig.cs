@@ -125,6 +125,16 @@ namespace VPUpdater
         }
 
         /// <summary>
+        /// Loads the default configuration.
+        /// </summary>
+        public async Task LoadDefaults()
+        {
+            this["stable_only"] = this["stable_only", 1];
+
+            await this.Save();
+        }
+
+        /// <summary>
         /// Saves the configuration to file.
         /// </summary>
         public async Task Save()

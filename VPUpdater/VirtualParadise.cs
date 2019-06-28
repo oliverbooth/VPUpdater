@@ -111,6 +111,19 @@ namespace VPUpdater
         }
 
         /// <summary>
+        /// Gets the pre-release version of Virtual Paradise.
+        /// </summary>
+        /// <returns>Returns a new instance of <see cref="VirtualParadise"/>, or <see langword="null"/> on failure.</returns>
+        public static VirtualParadise GetPreRelease()
+        {
+            string path = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) +
+                          Path.DirectorySeparatorChar                                       +
+                          @"Virtual Paradise (pre-release)";
+
+            return GetCurrent(path);
+        }
+
+        /// <summary>
         /// Translates a <see cref="SysVer"/> into a semantic version compliant <see cref="SemVer"/>.
         /// </summary>
         /// <param name="version">The <see cref="SysVer"/> to translate.</param>
