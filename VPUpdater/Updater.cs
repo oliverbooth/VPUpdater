@@ -17,12 +17,12 @@ namespace VPUpdater
     using System.IO;
     using System.Linq;
     using System.Net;
+    using System.ServiceModel.Syndication;
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
-    using System.Windows.Forms;
+    using System.Xml;
     using AngleSharp;
     using AngleSharp.Dom;
-    using AngleSharp.Io;
     using Properties;
     using SemVer = SemVer.Version;
 
@@ -34,6 +34,12 @@ namespace VPUpdater
     public class Updater : IDisposable
     {
         #region Fields
+
+        /// <summary>
+        /// Regular expression for matching semantic version strings.
+        /// </summary>
+        private const string SemVerRegex =
+            @"(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(\+[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*)?";
 
         /// <summary>
         /// The <see cref="VirtualParadise"/> instance.
@@ -125,25 +131,58 @@ namespace VPUpdater
         /// Fetches the latest version of Virtual Paradise.
         /// </summary>
         /// <returns>Gets the version string of the latest stable Virtual Paradise.</returns>
-        public async Task<SemVer> FetchLatest()
+        public async Task<SemVer> FetchLatest(UpdateChannel channel = UpdateChannel.Stable)
         {
             using (WebClient client = new WebClient())
             {
-                client.DownloadProgressChanged += this.WebClientProgressChanged;
-                this.webClient                 =  client;
+                switch (channel)
+                {
+                    case UpdateChannel.PreRelease:
+                        string rssUri = new Uri(VirtualParadise.Uri, @"/edwin/feed").ToString();
+                        using (XmlReader rssReader = XmlReader.Create(rssUri))
+                        {
+                            SyndicationFeed feed  = SyndicationFeed.Load(rssReader);
+                            Match           match = null;
+                            SyndicationItem item =
+                                feed.Items.FirstOrDefault(i => Regex.Match(i.Title.Text, @"Virtual Paradise").Success &&
+                                                               (match =
+                                                                   Regex.Match(
+                                                                       i.Title.Text, SemVerRegex,
+                                                                       RegexOptions.IgnoreCase))
+                                                              .Success);
 
-                Uri    uri           = new Uri(VirtualParadise.Uri, @"version.txt");
-                string versionString = await client.DownloadStringTaskAsync(uri);
+                            if (!(item is null || match is null))
+                            {
+                                // Return the version
+                                return new SemVer(match.Value);
+                            }
 
-                return new SemVer(versionString);
+                            // Return the latest stable instead
+                            return await this.FetchLatest();
+                        }
+
+                    case UpdateChannel.Stable:
+                    default:
+                        client.DownloadProgressChanged += this.WebClientProgressChanged;
+                        this.webClient                 =  client;
+
+                        Uri    uri           = new Uri(VirtualParadise.Uri, @"version.txt");
+                        string versionString = await client.DownloadStringTaskAsync(uri);
+
+                        return new SemVer(versionString);
+                }
             }
         }
 
         /// <summary>
         /// Fetches the Uri of the latest download from the Virtual Paradise download page.
         /// </summary>
+        /// <param name="channel">The update channel to use.</param>
+        /// <param name="item">If <paramref name="channel"/> is set to <see cref="UpdateChannel.PreRelease"/>, the method will parse
+        /// this <see cref="SyndicationItem"/> for a valid download URI.</param>
         /// <returns>Returns a <see cref="Uri"/> containing the download link.</returns>
-        public async Task<Uri> FetchDownloadLink()
+        public async Task<Uri> FetchDownloadLink(UpdateChannel   channel = UpdateChannel.Stable,
+                                                 SyndicationItem item    = null)
         {
             IConfiguration   config          = Configuration.Default.WithDefaultLoader();
             IBrowsingContext context         = BrowsingContext.New(config);
@@ -173,7 +212,8 @@ namespace VPUpdater
         {
             if (!File.Exists(this.setupPath))
             {
-                throw new FileNotFoundException(String.Format(Resources.FileNotFound, Path.GetFileName(this.setupPath)));
+                throw new FileNotFoundException(
+                    String.Format(Resources.FileNotFound, Path.GetFileName(this.setupPath)));
             }
 
             await Task.Run(() =>
