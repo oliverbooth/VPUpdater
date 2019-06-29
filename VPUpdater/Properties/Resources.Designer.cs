@@ -164,6 +164,16 @@ namespace VPUpdater.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap Icon {
+            get {
+                object obj = ResourceManager.GetObject("Icon", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Would you like to launch Virtual Paradise?
         ///
         ///Current version: {0}.
@@ -249,6 +259,26 @@ namespace VPUpdater.Properties {
             get {
                 object obj = ResourceManager.GetObject("VP", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap VP_Pre {
+            get {
+                object obj = ResourceManager.GetObject("VP_Pre", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap VP_Stable {
+            get {
+                object obj = ResourceManager.GetObject("VP_Stable", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
         

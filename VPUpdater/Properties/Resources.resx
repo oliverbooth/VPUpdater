@@ -151,7 +151,7 @@ Latest version: {1}</value>
   </data>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
   <data name="VP" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\vp.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+    <value>..\Images\VP.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="VpExeNotFound" xml:space="preserve">
     <value>{0} was not found. The updater cannot continue.</value>
@@ -203,5 +203,20 @@ Current version: {0}</value>
       <value>Could not create VirtualParadise object:
 
 {0}</value>
+  </data>
+  <data name="Icon" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Images\Icon.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Ready" xml:space="preserve">
+    <value>Ready</value>
+  </data>
+  <data name="LauncherWindow_InstalledVersionsScan" xml:space="preserve">
+    <value>Scanning for installed versions...</value>
+  </data>
+  <data name="VP_Pre" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Images\VP-pre.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="VP_Stable" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Images\VP.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>
